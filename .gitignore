@@ -1,5 +1,4 @@
 node_modules
-dist
 .DS_Store
 server/public
 vite.config.ts.*
@@ -8,3 +7,5 @@ vite.config.ts.*
 .env.local
 .env.*.local
 *.log
+# dist/public is committed so Render doesn't need to run Vite
+dist/index.cjs
