@@ -1,152 +1,196 @@
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { useAuth, useSelect } from "@/App";
-import { getProductById, CATEGORIES } from "@/lib/localData";
-import { formatPrice, efficiencyColor } from "@/lib/utils";
-import { Link } from "wouter";
-import { Trash2, Share2, CheckCircle2, BookOpen, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { PRODUCTS } from "@/lib/localData";
+import type { Product } from "@shared/schema";
+import { FolderOpen, Plus, Trash2, BookOpen, Package } from "lucide-react";
 
-type Catalog = { id: string; name: string; productIds: number[]; createdAt: string };
+// Local-only saved catalog shape — no backend needed for prototype
+type LocalCatalog = {
+  id: number;
+  name: string;
+  description: string;
+  productIds: number[];
+  createdAt: string;
+};
 
-const STORAGE_KEY = "hvac_catalogs";
-
-function loadCatalogs(): Catalog[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); }
-  catch { return []; }
-}
-
-function saveCatalogs(catalogs: Catalog[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(catalogs));
-}
+// Pre-seeded demo catalog so the page isn't empty on first load
+const DEMO_CATALOG: LocalCatalog = {
+  id: 1,
+  name: "High-Efficiency Summer Line",
+  description: "Top SEER2 units for residential replacement jobs",
+  productIds: [1, 2, 4, 7],
+  createdAt: new Date().toISOString(),
+};
 
 export default function MyCatalogsPage() {
   const { user } = useAuth();
   const { selected, clear } = useSelect();
   const { toast } = useToast();
-  const [catalogs, setCatalogs] = useState<Catalog[]>(loadCatalogs);
-  const [newName, setNewName] = useState("");
-  const [activeCatalog, setActiveCatalog] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [catalogName, setCatalogName] = useState("");
+  const [catalogDesc, setCatalogDesc] = useState("");
+  const [catalogs, setCatalogs] = useState<LocalCatalog[]>([DEMO_CATALOG]);
+  const [nextId, setNextId] = useState(2);
 
-  function createCatalog() {
-    if (!newName.trim()) return;
-    const c: Catalog = {
-      id: crypto.randomUUID(),
-      name: newName.trim(),
-      productIds: [...selected],
+  function handleCreate() {
+    if (!catalogName.trim()) return;
+    const newCat: LocalCatalog = {
+      id: nextId,
+      name: catalogName.trim(),
+      description: catalogDesc.trim(),
+      productIds: Array.from(selected),
       createdAt: new Date().toISOString(),
     };
-    const updated = [c, ...catalogs];
-    setCatalogs(updated);
-    saveCatalogs(updated);
+    setCatalogs(prev => [newCat, ...prev]);
+    setNextId(n => n + 1);
+    setCreateOpen(false);
+    setCatalogName("");
+    setCatalogDesc("");
     clear();
-    setNewName("");
-    toast({ title: "Catalog created", description: `"${c.name}" saved with ${c.productIds.length} product${c.productIds.length !== 1 ? "s" : ""}.` });
+    toast({ title: "Catalog created", description: "Your catalog has been saved." });
   }
 
-  function deleteCatalog(id: string) {
-    const updated = catalogs.filter(c => c.id !== id);
-    setCatalogs(updated);
-    saveCatalogs(updated);
-    if (activeCatalog === id) setActiveCatalog(null);
-  }
-
-  function shareLink(id: string) {
-    const url = `${window.location.origin}/shared/${id}`;
-    navigator.clipboard.writeText(url).then(() =>
-      toast({ title: "Link copied", description: "Share link copied to clipboard." })
-    );
-  }
-
-  const active = activeCatalog ? catalogs.find(c => c.id === activeCatalog) : null;
-
-  if (!user) {
-    return (
-      <AppLayout title="My Catalogs">
-        <div className="p-6 text-muted-foreground text-sm">Please sign in to manage catalogs.</div>
-      </AppLayout>
-    );
+  function handleDelete(id: number) {
+    setCatalogs(prev => prev.filter(c => c.id !== id));
+    toast({ title: "Catalog deleted" });
   }
 
   return (
     <AppLayout title="My Catalogs">
       <div className="p-4 md:p-6 max-w-4xl mx-auto">
-        {/* Create new */}
-        <div className="bg-card border border-border rounded-xl p-4 mb-6">
-          <h2 className="font-semibold text-sm mb-3">Create New Catalog</h2>
-          {selected.size > 0 && (
-            <p className="text-xs text-primary mb-3">{selected.size} product{selected.size !== 1 ? "s" : ""} selected from catalog</p>
-          )}
-          <div className="flex gap-2">
-            <Input
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              placeholder="Catalog name (e.g. \"Smith Residence Build\")"
-              className="flex-1 bg-muted/50"
-              onKeyDown={e => e.key === "Enter" && createCatalog()}
+        {/* Selection banner */}
+        {selected.size > 0 && (
+          <div className="mb-4 flex items-center justify-between bg-primary/10 border border-primary/30 rounded-xl px-4 py-3">
+            <p className="text-sm font-medium text-primary">{selected.size} product{selected.size !== 1 ? "s" : ""} selected</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => clear()} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
+              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-xs">
+                    <Plus size={12} className="mr-1.5" /> Save as Catalog
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-card border-border">
+                  <DialogHeader>
+                    <DialogTitle>Create New Catalog</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <div>
+                      <Label className="text-sm">Catalog Name</Label>
+                      <Input
+                        value={catalogName}
+                        onChange={e => setCatalogName(e.target.value)}
+                        placeholder="e.g. Spring 2026 High Efficiency"
+                        className="mt-1.5 bg-muted border-border"
+                        data-testid="input-catalog-name"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Description (optional)</Label>
+                      <Input
+                        value={catalogDesc}
+                        onChange={e => setCatalogDesc(e.target.value)}
+                        placeholder="Short description…"
+                        className="mt-1.5 bg-muted border-border"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{selected.size} product{selected.size !== 1 ? "s" : ""} will be included</p>
+                    <Button
+                      onClick={handleCreate}
+                      disabled={!catalogName.trim()}
+                      className="w-full bg-primary hover:bg-primary/90"
+                      data-testid="button-create-catalog"
+                    >
+                      Create Catalog
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {catalogs.length === 0 && selected.size === 0 && (
+          <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
+            <FolderOpen size={36} className="mx-auto mb-3 opacity-25" />
+            <h3 className="font-semibold text-foreground mb-1">No catalogs yet</h3>
+            <p className="text-sm">Select products from the catalog and save them as a curated list.</p>
+          </div>
+        )}
+
+        {/* Catalog list */}
+        <div className="space-y-3">
+          {catalogs.map(cat => (
+            <CatalogCard
+              key={cat.id}
+              catalog={cat}
+              onDelete={() => handleDelete(cat.id)}
             />
-            <Button onClick={createCatalog} disabled={!newName.trim()} size="sm" className="gap-1.5">
-              <Plus size={14} /> Create
-            </Button>
+          ))}
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
+
+function CatalogCard({ catalog, onDelete }: { catalog: LocalCatalog; onDelete: () => void }) {
+  // Resolve product objects from local data
+  const products = PRODUCTS.filter(p => catalog.productIds.includes(p.id));
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+            <BookOpen size={16} className="text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>{catalog.name}</h3>
+            {catalog.description && (
+              <p className="text-xs text-muted-foreground mt-0.5">{catalog.description}</p>
+            )}
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Package size={11} /> {catalog.productIds.length} product{catalog.productIds.length !== 1 ? "s" : ""}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(catalog.createdAt).toLocaleDateString()}
+              </span>
+            </div>
           </div>
         </div>
 
-        {catalogs.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <BookOpen size={32} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No catalogs yet. Select products from the catalog and create one above.</p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {catalogs.map(c => (
-              <div
-                key={c.id}
-                className={`bg-card border rounded-xl overflow-hidden transition-all ${activeCatalog === c.id ? "border-primary/50" : "border-border"}`}
-              >
-                <div
-                  className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-muted/30"
-                  onClick={() => setActiveCatalog(activeCatalog === c.id ? null : c.id)}
-                >
-                  <div>
-                    <p className="font-semibold text-sm">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">{c.productIds.length} product{c.productIds.length !== 1 ? "s" : ""} · {new Date(c.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={e => { e.stopPropagation(); shareLink(c.id); }} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"><Share2 size={14} /></button>
-                    <button onClick={e => { e.stopPropagation(); deleteCatalog(c.id); }} className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
-                  </div>
-                </div>
-                {activeCatalog === c.id && c.productIds.length > 0 && (
-                  <div className="border-t border-border/60 divide-y divide-border/40">
-                    {c.productIds.map(pid => {
-                      const p = getProductById(pid);
-                      if (!p) return null;
-                      return (
-                        <div key={pid} className="px-4 py-2.5 flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">{p.name}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{p.modelNumber}</p>
-                          </div>
-                          <div className="text-right">
-                            {p.seer2 && <p className={`text-xs font-semibold ${efficiencyColor(p.seer2)}`}>{p.seer2} SEER2</p>}
-                            <p className="text-sm font-semibold">
-                              {user.role === "distributor" ? formatPrice(p.distributorPrice) :
-                               user.role === "dealer" ? formatPrice(p.dealerPrice) :
-                               formatPrice(p.listPrice)}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-red-400"
+          data-testid={`button-delete-catalog-${catalog.id}`}
+        >
+          <Trash2 size={14} />
+        </Button>
       </div>
-    </AppLayout>
+
+      {/* Product preview */}
+      {products.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/60 flex flex-wrap gap-1.5">
+          {products.slice(0, 4).map(p => (
+            <span key={p.id} className="text-[10px] bg-muted border border-border rounded px-1.5 py-0.5 font-mono text-muted-foreground">
+              {p.modelNumber}
+            </span>
+          ))}
+          {products.length > 4 && (
+            <span className="text-[10px] text-muted-foreground">+{products.length - 4} more</span>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
