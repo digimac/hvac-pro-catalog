@@ -31,15 +31,18 @@ export default function AdminPage() {
   return (
     <AppLayout title="Admin Dashboard">
       <div className="p-4 md:p-6 max-w-5xl mx-auto">
+        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <StatTile icon={Package} label="Total Products" value={String(PRODUCTS.length)} color="text-blue-400" />
           <StatTile icon={Layers} label="Categories" value={String(CATEGORIES.length)} color="text-teal-400" />
           <StatTile icon={Users} label="Brands" value={String(brands.length)} color="text-purple-400" />
           <StatTile icon={BarChart3} label="Active SKUs" value={String(PRODUCTS.filter(p => p.isActive).length)} color="text-green-400" />
         </div>
+
+        {/* Products by brand */}
         <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
           <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <h2 className="font-semibold text-sm">Products by Brand</h2>
+            <h2 className="font-semibold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>Products by Brand</h2>
           </div>
           <div className="divide-y divide-border/60">
             {byBrand.map(b => (
@@ -53,9 +56,11 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
+
+        {/* All products table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border bg-muted/30">
-            <h2 className="font-semibold text-sm">All Products</h2>
+            <h2 className="font-semibold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>All Products</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -94,7 +99,7 @@ function StatTile({ icon: Icon, label, value, color }: { icon: any; label: strin
         <Icon size={14} className={color} />
         <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{label}</p>
       </div>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+      <p className={`text-2xl font-bold ${color}`} style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>{value}</p>
     </div>
   );
 }
