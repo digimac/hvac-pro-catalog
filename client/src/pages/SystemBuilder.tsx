@@ -1,158 +1,213 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/AppLayout";
-import { useAuth } from "@/App";
-import { getProducts, getMatchupsForOutdoorUnit } from "@/lib/localData";
+import { Button } from "@/components/ui/button";
+import { PRODUCTS, getMatchupsForOutdoorUnit } from "@/lib/localData";
 import { formatPrice, efficiencyColor } from "@/lib/utils";
-import { Link } from "wouter";
-import { ArrowRight, ChevronDown, Zap, Flame, Wind } from "lucide-react";
+import { useAuth } from "@/App";
+import {
+  ArrowRight, CheckCircle2, Award, Wrench, RefreshCw,
+  Snowflake, Wind, ChevronRight
+} from "lucide-react";
 
 export default function SystemBuilderPage() {
   const { user } = useAuth();
   const [selectedOutdoorId, setSelectedOutdoorId] = useState<number | null>(null);
+  const [brandFilter, setBrandFilter] = useState<string>("");
 
-  const outdoorUnits = useMemo(() =>
-    getProducts().filter(p => p.type === "outdoor"),
-  []);
+  // All outdoor units (type "outdoor") from local data
+  const outdoorUnits = useMemo(
+    () => PRODUCTS.filter(p => p.type === "outdoor"),
+    []
+  );
 
-  const matchups = useMemo(() =>
-    selectedOutdoorId ? getMatchupsForOutdoorUnit(selectedOutdoorId) : [],
-  [selectedOutdoorId]);
+  const brands = useMemo(
+    () => [...new Set(outdoorUnits.map(p => p.brand))],
+    [outdoorUnits]
+  );
+
+  const filteredOutdoor = useMemo(
+    () => outdoorUnits.filter(p => !brandFilter || p.brand === brandFilter),
+    [outdoorUnits, brandFilter]
+  );
+
+  const matchups = useMemo(
+    () => (selectedOutdoorId ? getMatchupsForOutdoorUnit(selectedOutdoorId) : []),
+    [selectedOutdoorId]
+  );
 
   const selectedOutdoor = outdoorUnits.find(p => p.id === selectedOutdoorId);
 
   return (
     <AppLayout title="System Builder">
-      <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      <div className="p-4 md:p-6 max-w-6xl mx-auto">
+        <p className="text-sm text-muted-foreground mb-6">
+          Start with an outdoor unit to see AHRI-certified system matchups with compatible indoor units, air handlers, and furnaces.
+        </p>
 
-        {/* Step 1: Select outdoor unit */}
-        <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
-          <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-            <h2 className="font-semibold text-sm">Step 1: Select Outdoor Unit</h2>
-            <span className="text-xs text-muted-foreground">{outdoorUnits.length} units</span>
-          </div>
-          <div className="p-3">
-            <div className="relative">
-              <select
-                value={selectedOutdoorId ?? ""}
-                onChange={e => setSelectedOutdoorId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-10 pl-3 pr-8 text-sm bg-muted border border-border rounded-lg appearance-none cursor-pointer text-foreground"
-              >
-                <option value="">-- Choose an outdoor unit --</option>
-                {outdoorUnits.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.modelNumber} — {u.name} ({u.tonCapacity}T{u.seer2 ? `, ${u.seer2} SEER2` : ""})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Step 1 — Select Outdoor Unit */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">1</div>
+              <h2 className="font-semibold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>Select Outdoor Unit</h2>
+              {selectedOutdoorId && (
+                <button onClick={() => setSelectedOutdoorId(null)} className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+                  <RefreshCw size={11} /> Reset
+                </button>
+              )}
             </div>
 
-            {selectedOutdoor && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">{selectedOutdoor.brand} {selectedOutdoor.series}</span>
-                {selectedOutdoor.seer2 && <span className={`text-xs px-2 py-1 rounded bg-muted font-semibold ${efficiencyColor(selectedOutdoor.seer2)}`}>{selectedOutdoor.seer2} SEER2</span>}
-                {selectedOutdoor.hspf2 && <span className="text-xs px-2 py-1 rounded bg-muted text-blue-400 font-semibold">{selectedOutdoor.hspf2} HSPF2</span>}
-                {selectedOutdoor.refrigerant && <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">{selectedOutdoor.refrigerant}</span>}
+            {/* Brand filter pills */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <button
+                onClick={() => setBrandFilter("")}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${!brandFilter ? "bg-primary/15 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
+              >
+                All
+              </button>
+              {brands.map(b => (
+                <button
+                  key={b}
+                  onClick={() => setBrandFilter(brandFilter === b ? "" : b)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${brandFilter === b ? "bg-primary/15 border-primary/40 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              {filteredOutdoor.map(unit => {
+                const isSelected = selectedOutdoorId === unit.id;
+                const isHP = unit.categoryId === 2;
+                const Icon = isHP ? Wind : Snowflake;
+                return (
+                  <button
+                    key={unit.id}
+                    onClick={() => setSelectedOutdoorId(isSelected ? null : unit.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                      isSelected
+                        ? "bg-primary/10 border-primary/50"
+                        : "bg-card border-border hover:border-muted-foreground/40"
+                    }`}
+                    data-testid={`outdoor-unit-${unit.id}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${isHP ? "bg-blue-500/15" : "bg-teal-500/15"}`}>
+                      <Icon size={16} className={isHP ? "text-blue-400" : "text-teal-400"} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{unit.name}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{unit.modelNumber}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      {unit.seer2 && (
+                        <p className={`text-sm font-bold ${efficiencyColor(unit.seer2)}`}>{unit.seer2} SEER2</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">{unit.tonCapacity}T</p>
+                    </div>
+                    {isSelected && <CheckCircle2 size={16} className="text-primary flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Step 2 — Matchups */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedOutdoorId ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>2</div>
+              <h2 className="font-semibold text-sm" style={{ fontFamily: "'Cabinet Grotesk', sans-serif" }}>Compatible Systems</h2>
+            </div>
+
+            {!selectedOutdoorId ? (
+              <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground h-64 flex flex-col items-center justify-center">
+                <Wrench size={28} className="mb-2 opacity-25" />
+                <p className="font-medium text-sm">Select an outdoor unit</p>
+                <p className="text-xs mt-1">Compatible systems will appear here</p>
+              </div>
+            ) : matchups.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground h-64 flex flex-col items-center justify-center">
+                <p className="font-medium text-sm">No matchups found</p>
+                <p className="text-xs mt-1">for {selectedOutdoor?.name}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {matchups.map(m => (
+                  <div key={m.id} className="bg-card border border-border rounded-xl p-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      {m.isAhriCertified && (
+                        <span className="badge-ahri text-[10px] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                          <Award size={10} /> AHRI Certified
+                        </span>
+                      )}
+                      {m.systemType && (
+                        <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full font-medium border border-border">
+                          {m.systemType}
+                        </span>
+                      )}
+                      {m.ahriRefNumber && (
+                        <span className="text-[10px] text-muted-foreground font-mono ml-auto">{m.ahriRefNumber}</span>
+                      )}
+                    </div>
+
+                    {/* Components flow */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3">
+                      {m.outdoorUnit && (
+                        <ComponentPill type="Outdoor" name={m.outdoorUnit.modelNumber} />
+                      )}
+                      {m.indoorUnit && (
+                        <><ChevronRight size={12} className="text-muted-foreground flex-shrink-0" />
+                        <ComponentPill type="Indoor" name={m.indoorUnit.modelNumber} /></>
+                      )}
+                      {m.coil && (
+                        <><ChevronRight size={12} className="text-muted-foreground flex-shrink-0" />
+                        <ComponentPill type="Coil" name={m.coil.modelNumber} /></>
+                      )}
+                      {m.furnace && (
+                        <><ChevronRight size={12} className="text-muted-foreground flex-shrink-0" />
+                        <ComponentPill type="Furnace" name={m.furnace.modelNumber} /></>
+                      )}
+                    </div>
+
+                    {/* AHRI performance */}
+                    <div className="flex flex-wrap gap-3 text-sm border-t border-border/60 pt-2.5">
+                      {m.certifiedSeer2 && (
+                        <div><span className={`font-bold ${efficiencyColor(m.certifiedSeer2)}`}>{m.certifiedSeer2}</span><span className="text-muted-foreground text-xs ml-1">SEER2</span></div>
+                      )}
+                      {m.certifiedEer2 && (
+                        <div><span className="font-bold text-blue-400">{m.certifiedEer2}</span><span className="text-muted-foreground text-xs ml-1">EER2</span></div>
+                      )}
+                      {m.certifiedHspf2 && (
+                        <div><span className="font-bold text-blue-300">{m.certifiedHspf2}</span><span className="text-muted-foreground text-xs ml-1">HSPF2</span></div>
+                      )}
+                      {m.certifiedBtuCooling && (
+                        <div><span className="font-medium">{(m.certifiedBtuCooling / 1000).toFixed(0)}K BTU</span><span className="text-muted-foreground text-xs ml-1">cooling</span></div>
+                      )}
+                      {m.certifiedBtuHeating && (
+                        <div><span className="font-medium">{(m.certifiedBtuHeating / 1000).toFixed(0)}K BTU</span><span className="text-muted-foreground text-xs ml-1">heating</span></div>
+                      )}
+                    </div>
+
+                    {m.notes && (
+                      <p className="text-xs text-muted-foreground mt-2 italic">{m.notes}</p>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
-
-        {/* Step 2: Compatible systems */}
-        {selectedOutdoorId && (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-              <h2 className="font-semibold text-sm">Step 2: Compatible System Configurations</h2>
-              <span className="text-xs text-muted-foreground">{matchups.length} matchup{matchups.length !== 1 ? "s" : ""}</span>
-            </div>
-
-            {matchups.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground text-sm">
-                No matchups found for this outdoor unit.
-              </div>
-            ) : (
-              <div className="divide-y divide-border/40">
-                {matchups.map(m => {
-                  const systemIcon = m.systemType?.includes("HP") ? Wind :
-                    m.systemType?.includes("Gas") ? Flame : Zap;
-                  const SystemIcon = systemIcon;
-                  return (
-                    <div key={m.id} className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <SystemIcon size={13} className="text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold">{m.systemType} System</p>
-                            <p className="text-xs text-muted-foreground font-mono">{m.ahriRefNumber}</p>
-                          </div>
-                        </div>
-                        {m.isAhriCertified && (
-                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded font-semibold">AHRI Certified</span>
-                        )}
-                      </div>
-
-                      {/* Efficiency badges */}
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {m.certifiedSeer2 && <span className={`text-xs font-semibold px-2 py-0.5 rounded bg-muted ${efficiencyColor(m.certifiedSeer2)}`}>{m.certifiedSeer2} SEER2</span>}
-                        {m.certifiedEer2 && <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted text-sky-400">{m.certifiedEer2} EER2</span>}
-                        {m.certifiedHspf2 && <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted text-blue-400">{m.certifiedHspf2} HSPF2</span>}
-                      </div>
-
-                      {/* System components */}
-                      <div className="bg-muted/30 rounded-lg p-3 space-y-2">
-                        {m.outdoorUnit && (
-                          <ComponentRow label="Outdoor" product={m.outdoorUnit} userRole={user?.role} />
-                        )}
-                        {m.indoorUnit && (
-                          <ComponentRow label="Indoor" product={m.indoorUnit} userRole={user?.role} />
-                        )}
-                        {m.coil && (
-                          <ComponentRow label="Coil" product={m.coil} userRole={user?.role} />
-                        )}
-                        {m.furnace && (
-                          <ComponentRow label="Furnace" product={m.furnace} userRole={user?.role} />
-                        )}
-                      </div>
-
-                      {m.notes && (
-                        <p className="text-xs text-muted-foreground mt-2 italic">{m.notes}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!selectedOutdoorId && (
-          <div className="text-center py-12 text-muted-foreground">
-            <ArrowRight size={28} className="mx-auto mb-3 opacity-20" />
-            <p className="text-sm">Select an outdoor unit above to see compatible system configurations.</p>
-          </div>
-        )}
       </div>
     </AppLayout>
   );
 }
 
-function ComponentRow({ label, product, userRole }: { label: string; product: any; userRole?: string }) {
-  const price = userRole === "distributor" ? product.distributorPrice :
-    userRole === "dealer" ? product.dealerPrice :
-    product.listPrice;
+function ComponentPill({ type, name }: { type: string; name: string }) {
   return (
-    <div className="flex items-center justify-between text-xs">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-muted-foreground w-14 flex-shrink-0">{label}</span>
-        <Link href={`/product/${product.id}`} className="font-mono text-primary hover:underline truncate">{product.modelNumber}</Link>
-      </div>
-      {price && (
-        <span className="font-semibold flex-shrink-0">
-          {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(price)}
-        </span>
-      )}
+    <div className="flex-shrink-0 bg-muted/60 border border-border rounded-lg px-2 py-1 text-center">
+      <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">{type}</p>
+      <p className="text-[10px] font-mono font-medium truncate max-w-[90px]">{name}</p>
     </div>
   );
 }
