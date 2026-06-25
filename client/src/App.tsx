@@ -80,7 +80,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthContext.Provider value={{ user, setUser }}>
         <SelectContext.Provider value={{ selected, toggle, clear }}>
-          <div className="dark">
+          <div>
             <AppShell />
             <Toaster />
           </div>
