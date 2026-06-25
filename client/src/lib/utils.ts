@@ -37,11 +37,11 @@ export function formatTon(val: number | null | undefined): string {
 }
 
 export function efficiencyColor(seer2: number | null | undefined): string {
-  if (!seer2) return "text-muted-foreground";
-  if (seer2 >= 24) return "text-green-400";
-  if (seer2 >= 18) return "text-blue-400";
-  if (seer2 >= 16) return "text-yellow-400";
-  return "text-muted-foreground";
+  if (!seer2) return "text-gray-400";
+  if (seer2 >= 24) return "text-green-600";
+  if (seer2 >= 18) return "text-blue-600";
+  if (seer2 >= 16) return "text-amber-600";
+  return "text-gray-500";
 }
 
 export function stagesLabel(stages: string | null | undefined): string {
