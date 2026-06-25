@@ -4,7 +4,7 @@ export default function PerplexityAttribution() {
       href="https://www.perplexity.ai/computer"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      className="text-[10px] text-gray-400 hover:text-gray-300 transition-colors"
     >
       Created with Perplexity Computer
     </a>
