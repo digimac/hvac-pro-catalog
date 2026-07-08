@@ -12,6 +12,7 @@ import SystemBuilderPage from "@/pages/SystemBuilder";
 import MyCatalogsPage from "@/pages/MyCatalogs";
 import SharedCatalogPage from "@/pages/SharedCatalog";
 import AdminPage from "@/pages/Admin";
+import OrdersPage from "@/pages/Orders";
 
 // ── Auth Context ──────────────────────────────────────────────────────────────
 export interface AuthUser {
@@ -56,6 +57,7 @@ function AppShell() {
         <Route path="/product/:id" component={ProductDetailPage} />
         <Route path="/system-builder" component={SystemBuilderPage} />
         <Route path="/my-catalogs" component={MyCatalogsPage} />
+        <Route path="/orders" component={OrdersPage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/shared/:token" component={SharedCatalogPage} />
         <Route>
