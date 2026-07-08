@@ -53,6 +53,7 @@ export const PRODUCTS = [
     features: ["Two-stage compressor", "WeatherArmor Ultra protection", "Scroll compressor"],
     isActive: true,
   },
+  // Trane Air Conditioners
   {
     id: 4, categoryId: 1, modelNumber: "4TTR8036L1000A", name: "Trane 3-Ton AC 22 SEER2",
     brand: "Trane", series: "XV20i", type: "outdoor", fuelType: "electric",
@@ -77,6 +78,7 @@ export const PRODUCTS = [
     features: ["Two-stage compressor", "Spine Fin coil", "All-aluminum construction"],
     isActive: true,
   },
+  // Lennox Air Conditioners
   {
     id: 6, categoryId: 1, modelNumber: "XC21-036-230", name: "Lennox 3-Ton AC 21 SEER2",
     brand: "Lennox", series: "XC21", type: "outdoor", fuelType: "electric",
@@ -89,6 +91,7 @@ export const PRODUCTS = [
     features: ["Variable-capacity compressor", "iComfort S30 compatible", "Louvered cabinet"],
     isActive: true,
   },
+  // Heat Pumps
   {
     id: 7, categoryId: 2, modelNumber: "25VNA636A003", name: "Carrier 3-Ton Heat Pump 20 SEER2",
     brand: "Carrier", series: "Infinity", type: "outdoor", fuelType: "electric",
@@ -113,6 +116,7 @@ export const PRODUCTS = [
     features: ["Two-stage compressor", "Spine Fin coil", "Dual-fuel compatible"],
     isActive: true,
   },
+  // Air Handlers
   {
     id: 9, categoryId: 3, modelNumber: "FE4ANF003000", name: "Carrier 2.5-Ton Air Handler",
     brand: "Carrier", series: "Fan Coil", type: "indoor", fuelType: "electric",
@@ -137,6 +141,7 @@ export const PRODUCTS = [
     features: ["Multiple installation positions", "Variable-speed ECM motor", "Ez-Fit cabinet design"],
     isActive: true,
   },
+  // Gas Furnaces
   {
     id: 11, categoryId: 4, modelNumber: "59MN7A100S21--14", name: "Carrier 100K BTU Furnace 96.7 AFUE",
     brand: "Carrier", series: "Infinity 96", type: "indoor", fuelType: "gas",
@@ -161,6 +166,7 @@ export const PRODUCTS = [
     features: ["Two-stage heating", "Variable-speed ECM blower", "SureLight silicon nitride igniter"],
     isActive: true,
   },
+  // Evaporator Coils
   {
     id: 13, categoryId: 5, modelNumber: "CNPVP3617ALA", name: "Carrier 1.5-3 Ton Cased Coil",
     brand: "Carrier", series: "A-Coil", type: "coil", fuelType: null,
@@ -213,7 +219,7 @@ export const MATCHUPS = [
   },
 ];
 
-// ── Helper functions ─────────────────────────────────────────────────────────
+// ── Helper functions ──────────────────────────────────────────────────────────
 
 export function login(email: string, password: string) {
   const user = DEMO_USERS.find(u => u.email === email && u.password === password);
@@ -268,3 +274,162 @@ export function getMatchupsForOutdoorUnit(outdoorUnitId: number) {
     furnace: m.furnaceId ? getProductById(m.furnaceId) : null,
   }));
 }
+
+// ── Orders ────────────────────────────────────────────────────────────────────
+export interface OrderItem {
+  modelNumber: string;
+  description: string;
+  brand: string;
+  qty: number;
+  unitPrice: number;
+}
+
+export interface Order {
+  id: number;
+  orderNumber: string;
+  orderDate: string;
+  status: "processing" | "shipped" | "delivered" | "cancelled" | "backordered";
+  shipTo: string;
+  distributorId: number;   // 2 = Sarah Mitchell (Acme HVAC)
+  dealerId: number;        // 3 = James Rivera (Cool HVAC)
+  poNumber?: string;
+  trackingNumber?: string;
+  carrier?: string;
+  estimatedDelivery?: string;
+  total: number;
+  items: OrderItem[];
+}
+
+export const ORDERS: Order[] = [
+  {
+    id: 1,
+    orderNumber: "ORD-2026-0841",
+    orderDate: "Jul 5, 2026",
+    status: "shipped",
+    shipTo: "Cool HVAC Services — Louisville, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00412",
+    trackingNumber: "1Z999AA10123456784",
+    carrier: "UPS Ground",
+    estimatedDelivery: "Jul 10, 2026",
+    total: 8360.00,
+    items: [
+      { modelNumber: "24ACC636A003", description: "Carrier 3-Ton AC 26 SEER2 Infinity Series", brand: "Carrier", qty: 2, unitPrice: 1820.00 },
+      { modelNumber: "FK4DNF003", description: "Carrier 2.5-Ton Air Handler Fan Coil", brand: "Carrier", qty: 2, unitPrice: 1180.00 },
+      { modelNumber: "58CTX080-16", description: "Carrier 80k BTU 2-Stage Furnace 96% AFUE", brand: "Carrier", qty: 2, unitPrice: 890.00 },
+    ],
+  },
+  {
+    id: 2,
+    orderNumber: "ORD-2026-0829",
+    orderDate: "Jun 28, 2026",
+    status: "delivered",
+    shipTo: "Cool HVAC Services — Louisville, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00398",
+    trackingNumber: "1Z999AA10198765432",
+    carrier: "FedEx Freight",
+    estimatedDelivery: "Jul 3, 2026",
+    total: 5490.00,
+    items: [
+      { modelNumber: "4TTR8036L1000A", description: "Trane XV20i 3-Ton AC 22 SEER2", brand: "Trane", qty: 1, unitPrice: 1750.00 },
+      { modelNumber: "4TTR4048E1000A", description: "Trane XR17 4-Ton AC 17 SEER2", brand: "Trane", qty: 1, unitPrice: 1290.00 },
+      { modelNumber: "TAM9A0B36V41DB", description: "Trane 3-Ton Variable Speed Air Handler", brand: "Trane", qty: 1, unitPrice: 1050.00 },
+      { modelNumber: "TUH2C080A9V4VB", description: "Trane S9V2 80k BTU Variable Gas Furnace", brand: "Trane", qty: 1, unitPrice: 1400.00 },
+    ],
+  },
+  {
+    id: 3,
+    orderNumber: "ORD-2026-0814",
+    orderDate: "Jun 18, 2026",
+    status: "delivered",
+    shipTo: "Cool HVAC Services — Lexington, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00381",
+    trackingNumber: "794644792798",
+    carrier: "FedEx Ground",
+    total: 3240.00,
+    items: [
+      { modelNumber: "XC20-024-230", description: "Lennox XC20 2-Ton AC 28 SEER2", brand: "Lennox", qty: 1, unitPrice: 1980.00 },
+      { modelNumber: "CBX40UHV-024", description: "Lennox 2-Ton Variable Speed Air Handler", brand: "Lennox", qty: 1, unitPrice: 1260.00 },
+    ],
+  },
+  {
+    id: 4,
+    orderNumber: "ORD-2026-0856",
+    orderDate: "Jul 7, 2026",
+    status: "processing",
+    shipTo: "Cool HVAC Services — Louisville, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00427",
+    total: 12750.00,
+    items: [
+      { modelNumber: "24ACC636A003", description: "Carrier 3-Ton AC 26 SEER2 Infinity Series", brand: "Carrier", qty: 3, unitPrice: 1820.00 },
+      { modelNumber: "24VNA948A003", description: "Carrier 4-Ton Heat Pump Infinity 24 HSPF2", brand: "Carrier", qty: 2, unitPrice: 2145.00 },
+      { modelNumber: "CNPVP4821ALA", description: "Carrier 4-Ton Evaporator Coil N-Coil", brand: "Carrier", qty: 2, unitPrice: 620.00 },
+    ],
+  },
+  {
+    id: 5,
+    orderNumber: "ORD-2026-0791",
+    orderDate: "Jun 5, 2026",
+    status: "backordered",
+    shipTo: "Cool HVAC Services — Louisville, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00362",
+    estimatedDelivery: "Jul 22, 2026",
+    total: 4860.00,
+    items: [
+      { modelNumber: "GSX160601", description: "Goodman 5-Ton AC 17 SEER2 Single Stage", brand: "Goodman", qty: 3, unitPrice: 920.00 },
+      { modelNumber: "ARUF61D14", description: "Goodman 5-Ton Multi-Speed Air Handler", brand: "Goodman", qty: 3, unitPrice: 700.00 },
+    ],
+  },
+  {
+    id: 6,
+    orderNumber: "ORD-2026-0768",
+    orderDate: "May 28, 2026",
+    status: "cancelled",
+    shipTo: "Cool HVAC Services — Louisville, KY",
+    distributorId: 2, dealerId: 3,
+    poNumber: "PO-CH-00344",
+    total: 2240.00,
+    items: [
+      { modelNumber: "24SCA536A003", description: "Carrier 3-Ton AC 18 SEER2 Performance Series", brand: "Carrier", qty: 2, unitPrice: 1120.00 },
+    ],
+  },
+  // Additional orders visible only to admin (different dealer)
+  {
+    id: 7,
+    orderNumber: "ORD-2026-0802",
+    orderDate: "Jun 12, 2026",
+    status: "delivered",
+    shipTo: "Midwest HVAC Solutions — Cincinnati, OH",
+    distributorId: 2, dealerId: 99,
+    poNumber: "PO-MW-00119",
+    trackingNumber: "9400111298370842840900",
+    carrier: "USPS Priority",
+    total: 7680.00,
+    items: [
+      { modelNumber: "XP20-036-230", description: "Lennox XP20 3-Ton Heat Pump 20 SEER2", brand: "Lennox", qty: 2, unitPrice: 2340.00 },
+      { modelNumber: "EL296UH110XV60C", description: "Lennox Elite 110k BTU Variable Gas Furnace", brand: "Lennox", qty: 2, unitPrice: 1500.00 },
+    ],
+  },
+  {
+    id: 8,
+    orderNumber: "ORD-2026-0817",
+    orderDate: "Jun 22, 2026",
+    status: "shipped",
+    shipTo: "BlueSky Comfort Systems — Indianapolis, IN",
+    distributorId: 2, dealerId: 88,
+    poNumber: "PO-BS-00077",
+    trackingNumber: "1ZX075W30394185088",
+    carrier: "UPS Ground",
+    estimatedDelivery: "Jul 9, 2026",
+    total: 9450.00,
+    items: [
+      { modelNumber: "GSX160361", description: "Goodman 3-Ton AC 17 SEER2 Single Stage", brand: "Goodman", qty: 5, unitPrice: 790.00 },
+      { modelNumber: "ARUF37C14", description: "Goodman 3-Ton Multi-Speed Air Handler", brand: "Goodman", qty: 5, unitPrice: 620.00 },
+      { modelNumber: "GCVC960804CX", description: "Goodman 80k BTU Variable Speed Furnace 96%", brand: "Goodman", qty: 2, unitPrice: 980.00 },
+    ],
+  },
+];
