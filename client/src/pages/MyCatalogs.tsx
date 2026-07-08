@@ -19,14 +19,51 @@ type LocalCatalog = {
   createdAt: string;
 };
 
-// Pre-seeded demo catalog so the page isn't empty on first load
-const DEMO_CATALOG: LocalCatalog = {
-  id: 1,
-  name: "High-Efficiency Summer Line",
-  description: "Top SEER2 units for residential replacement jobs",
-  productIds: [1, 2, 4, 7],
-  createdAt: new Date().toISOString(),
-};
+// Pre-seeded demo carts so the page isn't empty on first load
+const DEMO_CATALOGS: LocalCatalog[] = [
+  {
+    id: 1,
+    name: "High-Efficiency Summer Line",
+    description: "Top SEER2 units for residential replacement jobs",
+    productIds: [1, 2, 4, 7],
+    createdAt: "2026-07-01T09:15:00.000Z",
+  },
+  {
+    id: 2,
+    name: "Carrier Infinity Bundle — Q3",
+    description: "Full Carrier Infinity system packages for large residential installs",
+    productIds: [1, 2, 6, 8, 11],
+    createdAt: "2026-06-28T14:30:00.000Z",
+  },
+  {
+    id: 3,
+    name: "Trane Heat Pump Replacements",
+    description: "Trane XV series heat pump + air handler combos for retrofit projects",
+    productIds: [4, 5, 9, 10],
+    createdAt: "2026-06-22T08:00:00.000Z",
+  },
+  {
+    id: 4,
+    name: "Budget Tier — Goodman Value Pack",
+    description: "Entry-level Goodman units for price-sensitive dealer accounts",
+    productIds: [12, 13],
+    createdAt: "2026-06-15T11:45:00.000Z",
+  },
+  {
+    id: 5,
+    name: "Ductless Mini-Split Showcase",
+    description: "Multi-zone and single-zone ductless systems for additions and retrofits",
+    productIds: [3, 6, 7],
+    createdAt: "2026-07-03T16:00:00.000Z",
+  },
+  {
+    id: 6,
+    name: "Commercial Light-Commercial Package",
+    description: "Packaged rooftop and split systems for small commercial applications",
+    productIds: [5, 8, 10, 13],
+    createdAt: "2026-07-06T07:30:00.000Z",
+  },
+];
 
 export default function MyCatalogsPage() {
   const { user } = useAuth();
@@ -35,8 +72,8 @@ export default function MyCatalogsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [catalogName, setCatalogName] = useState("");
   const [catalogDesc, setCatalogDesc] = useState("");
-  const [catalogs, setCatalogs] = useState<LocalCatalog[]>([DEMO_CATALOG]);
-  const [nextId, setNextId] = useState(2);
+  const [catalogs, setCatalogs] = useState<LocalCatalog[]>(DEMO_CATALOGS);
+  const [nextId, setNextId] = useState(7);
 
   function handleCreate() {
     if (!catalogName.trim()) return;
